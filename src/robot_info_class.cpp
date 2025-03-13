@@ -10,7 +10,9 @@ RobotInfo::RobotInfo(std::string desc, std::string serial, std::string ip,
       firmware_version(firmware) {
   robot_info_pub =
       nh.advertise<robotinfo_msgs::RobotInfo10Fields>("robot_info", 10);
-};
+}
+
+RobotInfo::~RobotInfo() {}
 
 void RobotInfo::publish_data() {
   robotinfo_msgs::RobotInfo10Fields msg;
@@ -23,4 +25,4 @@ void RobotInfo::publish_data() {
   //   ROS_INFO("[PUBLISHED INFO][%s][%s][%s][%s]", robot_description.c_str(),
   //            serial_number.c_str(), ip_address.c_str(),
   //            firmware_version.c_str());
-};
+}
