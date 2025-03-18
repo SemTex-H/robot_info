@@ -1,26 +1,36 @@
+#include "hydraulic_system_monitor.cpp"
 #include "robot_info/robot_info_class.h"
 #include "robotinfo_msgs/RobotInfo10Fields.h"
 #include <ros/ros.h>
-
 #include <sstream>
 
 class AGVRobotInfo : public RobotInfo {
 private:
   double maximum_payload;
   ros::Publisher robot_info_pub;
+  HydraulicSystemMonitor hsm;
 
 public:
   AGVRobotInfo(const std::string &name, const std::string &model,
                const std::string &ip, const std::string &version,
                double payload, ros::NodeHandle &nh)
-      : RobotInfo(name, model, ip, version), maximum_payload(payload) {
+      : RobotInfo(name, model, ip, version), maximum_payload(payload),
+        hsm("45", "100", "250") {
     // Initialize publisher
     robot_info_pub =
         nh.advertise<robotinfo_msgs::RobotInfo10Fields>("robot_info", 10);
   }
 
-  void publish_data() override {
+  void publish_data() {
     robotinfo_msgs::RobotInfo10Fields msg;
+
+    std::string temp, level, pressure;
+
+    hsm.getHydraulicData(temp, level, pressure);
+
+    std::string temp1 = hsm.GetOilTemperature();
+    std::string level1 = hsm.GetOilTankLevel();
+    std::string pressure1 = hsm.GetOilPressure();
 
     msg.data_field_01 = "robot_description: " + robot_description;
     msg.data_field_02 = "serial_number: " + serial_number;
@@ -28,12 +38,15 @@ public:
     msg.data_field_04 = "firmware_version: " + firmware_version;
     msg.data_field_05 =
         "maximum_payload: " + std::to_string(maximum_payload) + " Kg";
+    msg.data_field_06 = "hydraulic_oil_temperature: " + temp + "C";
+    msg.data_field_07 = "hydraulic_oil_tank_fill_level: " + level + "%";
+    msg.data_field_08 = "hydraulic_oil_pressure: " + pressure + " bar";
 
     robot_info_pub.publish(msg);
     // ROS_INFO("[PUBLISHED INFO][%s][%s][%s][%s][%f]",
     // robot_description.c_str(),
-    //          serial_number.c_str(), ip_address.c_str(),
-    //          firmware_version.c_str(), maximum_payload);
+    //   serial_number.c_str(), ip_address.c_str(),
+    //   firmware_version.c_str(), maximum_payload);
   }
 };
 
